@@ -160,16 +160,26 @@ else:
         if st.form_submit_button("Predict"):
             # Convert input to DataFrame
             input_df = pd.DataFrame([input_data])
-            # Encode categoricals using stored encoders
+
+            # Encode categorical columns
             for col in input_df.columns:
                 if input_df[col].dtype == 'object':
                     le = st.session_state['encoders'][col]
                     try:
                         input_df[col] = le.transform(input_df[col].astype(str))
                     except:
-                        input_df[col] = 0
-            # Ensure column order
+                        input_df[col] = 0  # fallback for unseen values
+
+            # Force all columns to numeric (coerce errors to NaN, then fill with 0)
+            for col in input_df.columns:
+                input_df[col] = pd.to_numeric(input_df[col], errors='coerce').fillna(0)
+
+            # Ensure all columns are float (this will raise error if any remains object)
+            input_df = input_df.astype(float)
+
+            # Align column order with training
             input_df = input_df[st.session_state['features']]
+
             # Predict
             if st.session_state['model_type'] == "Deep Learning":
                 input_scaled = st.session_state['scaler'].transform(input_df)
@@ -180,7 +190,8 @@ else:
                     pred = np.argmax(pred, axis=1)[0]
             else:
                 pred = st.session_state['model'].predict(input_df)[0]
-            # Display
+
+            # Display result
             if st.session_state['task'] == "regression":
                 st.metric(f"Predicted {st.session_state['target']}", f"{pred:.3f}")
             else:
