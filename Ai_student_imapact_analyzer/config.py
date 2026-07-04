@@ -2,7 +2,7 @@
 # Global settings and constants
 
 # Paths
-DATA_PATH = "ai_student_impact_dataset(1).csv"
+DATA_PATH = "ai_student_impact_dataset (1).csv"
 MODEL_DIR = "models"
 
 # Target columns recognized in the dataset
